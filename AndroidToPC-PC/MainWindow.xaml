@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:AndroidToPC_PC"
         mc:Ignorable="d"
         Title="手机控制电脑" Height="400" Width="600">
+
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="45"/>
@@ -15,8 +16,17 @@
 
         <TextBlock Text="手机列表" FontSize="30" HorizontalAlignment="Center" Foreground="#FF494949" />
 
-        <ListView Grid.Row="1" x:Name="deviceList" />
+        <ListView x:Name="listView" Grid.Row="1" >
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="名称" Width="100" DisplayMemberBinding="{Binding DeviceName}"/>
+                    <GridViewColumn Header="IP" Width="100" DisplayMemberBinding="{Binding DeviceIp}"/>
+                    <GridViewColumn Header="状态" Width="100" DisplayMemberBinding="{Binding DeviceState}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
 
-        <Button x:Name="refresh" Grid.Row="2" Height="30" Width="100" Margin="5" Content="刷新"/>
+        <Button x:Name="refresh" Grid.Row="2" Height="30" Width="100" Margin="5" Content="刷新" Click="refresh_Click"/>
+
     </Grid>
 </Window>

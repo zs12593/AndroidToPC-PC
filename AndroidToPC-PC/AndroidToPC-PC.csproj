@@ -37,6 +37,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -69,6 +70,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Net\Manager\UDPSendManager.cs" />
+    <Compile Include="Net\Protocol\Protocol.cs" />
+    <Compile Include="Net\Protocol\ProtocolParam.cs" />
+    <Compile Include="Net\Manager\UDPReceiveManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
