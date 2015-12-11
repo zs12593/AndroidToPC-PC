@@ -47,4 +47,70 @@ namespace AndroidToPC_PC.Net.Protocol {
             this.deviceName = deviceName;
         }
     }
+
+    [DataContract]
+    public class Offline : ProtocolParam {
+    }
+
+    [DataContract]
+    public class Connect : Online {
+        public Connect(int deviceType, int onlineType, String deviceName) :
+            base(deviceType, onlineType, deviceName) {
+        }
+    }
+
+    [DataContract]
+    public class ConnectResponse : ProtocolParam {
+        [DataMember(Order = 2)]
+        public bool access { get; set; }
+        [DataMember(Order = 3)]
+        public string passwrod { get; set; }
+
+        public ConnectResponse(bool access, string password) {
+            this.access = access;
+            this.passwrod = passwrod;
+        }
+    }
+
+    [DataContract]
+    public class ConnectFeedback : ProtocolParam {
+    }
+
+    [DataContract]
+    public class Cursor : ProtocolParam {
+        public static string CONNECTED_PASSWORD;
+
+        [DataMember(Order = 2)]
+        public string passwrod { get; set; }
+
+        public Cursor(string password) {
+            this.passwrod = passwrod;
+        }
+    }
+
+    [DataContract]
+    public class MoveCursor : Cursor {
+        [DataMember(Order = 3)]
+        public int x { get; set; }
+        [DataMember(Order = 4)]
+        public int y { get; set; }
+
+        public MoveCursor(string password, int x, int y) : base(password) {
+            this.x = x;
+            this.y = y;
+        }
+    }
+
+    [DataContract]
+    public class Click : Cursor {
+        public const int LEFT_BUTTON = 0;
+        public const int RIGHT_BUTTON = 1;
+
+        [DataMember(Order = 3)]
+        public int button { get; set; }
+
+        public Click(string password, int button) : base(password) {
+            this.button = button;
+        }
+    }
 }

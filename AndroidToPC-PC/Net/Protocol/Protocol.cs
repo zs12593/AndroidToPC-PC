@@ -34,6 +34,8 @@ namespace AndroidToPC_PC.Net.Protocol {
             UdpClient sendClient = new UdpClient();
             sendClient.Send(sendbytes, sendbytes.Length, host);
             sendClient.Close();
+
+            System.Console.WriteLine("==== Message Send Finished");
         }
 
         private ProtocolParam createProtocolParam(string json) {
