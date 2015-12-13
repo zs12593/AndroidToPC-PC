@@ -65,10 +65,13 @@ namespace AndroidToPC_PC.Net.Protocol {
         public bool access { get; set; }
         [DataMember(Order = 3)]
         public string passwrod { get; set; }
+        [DataMember(Order = 4)]
+        public string message;
 
-        public ConnectResponse(bool access, string password) {
+        public ConnectResponse(bool access, string password, string message) {
             this.access = access;
             this.passwrod = passwrod;
+            this.message = message;
         }
     }
 

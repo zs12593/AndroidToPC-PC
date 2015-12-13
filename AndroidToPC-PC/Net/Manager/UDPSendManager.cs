@@ -26,15 +26,19 @@ namespace AndroidToPC_PC.Net.Manager {
             p.send();
         }
 
-        public static void sendConnectResponse(string ip, bool access) {
+        public static void sendConnectResponse(string ip, bool access, string message) {
             IPEndPoint host = new IPEndPoint(IPAddress.Parse("255.255.255.255"), SEND_PORT);
             Protocol.Protocol p = new Protocol.Protocol(
-                host, new Protocol.ConnectResponse(access, generatePassword()));
+                host, new Protocol.ConnectResponse(access, generatePassword(access), message));
             p.send();
         }
 
-        private static string generatePassword() {
-            return "";
+        private static string generatePassword(bool access) {
+            string pw = "";
+            if (access) {
+
+            }
+            return pw;
         }
 
     }

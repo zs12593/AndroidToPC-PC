@@ -1,22 +1,25 @@
 ﻿using AndroidToPC_PC.Net.Manager;
-using System.Collections.ObjectModel;
 using System.Windows;
 using System.ComponentModel;
 using AndroidToPC_PC.Net.Protocol;
 using System;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace AndroidToPC_PC {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
     public partial class MainWindow : Window {
-        private ObservableCollection<DeviceItem> listDatas = new ObservableCollection<DeviceItem>();
+        private BindingList<DeviceItem> listDatas = new BindingList<DeviceItem>();
+        // 请求连接
         private Thread connectThread;
         private string connectIp;
         private bool connectAccess;
         private int connectTimes;
+        private string connectMsg;
         private const int CONNECT_TIMES = 5;
+        private bool isConnected = false;
 
         public MainWindow() {
             InitializeComponent();
@@ -54,9 +57,6 @@ namespace AndroidToPC_PC {
                     if (!listDatas.Contains(item)) {
                         listDatas.Add(item);
                     }
-                    if (p.param is Connect) {
-                        item.DeviceState = "配对中...";
-                    }
                 }), null);
             });
         }
@@ -75,27 +75,48 @@ namespace AndroidToPC_PC {
         }
 
         private void connectCallback(Protocol p) {
-            if (connectThread != null && connectThread.IsAlive) return;
+            if (isConnected || (connectThread != null && connectThread.IsAlive)) {
+                connectMsg = "已和其它设备配对...";
+                return;
+            }
 
-            onlineCallback(p);
-
-            Connect connect = (Connect)p.param;
-            MessageBoxResult result = MessageBox.Show("\"" + connect.deviceName + "\"请求与你配对,是否同意？",
-                "配对请求", MessageBoxButton.YesNo);
+            connectMsg = "";
+            isConnected = false;
+            connectAccess = false;
             connectIp = p.host.Address.ToString();
-            connectAccess = MessageBoxResult.Yes.Equals(result);
-            connectThread = new Thread(connectResponse);
-            connectThread.Start();
+
+            ThreadPool.QueueUserWorkItem(delegate {
+                this.Dispatcher.Invoke(new Action(() => {
+                    Connect connect = (Connect)p.param;
+
+                    DeviceItem item = new DeviceItem() {
+                        DeviceName = connect.deviceName,
+                        DeviceIp = p.host.Address.ToString(),
+                        DeviceState = "配对中..."
+                    };
+                    if (!listDatas.Contains(item)) {
+                        listDatas.Add(item);
+                    }
+
+                    RequestDialog dialog = new RequestDialog();
+                    dialog.reqDevicename = connect.deviceName;
+                    dialog.ShowDialog();
+                    connectAccess = dialog.Access;
+                    connectThread = new Thread(connectResponse);
+                    connectThread.Start();
+
+                }), null);
+            });
         }
 
         private void connectResponse() {
-            if (connectAccess)
+            if (!connectAccess)
                 connectTimes = 0;
             else
                 connectTimes = CONNECT_TIMES - 1;
 
             while (true) {
-                UDPSendManager.sendConnectResponse(connectIp, connectAccess);
+                UDPSendManager.sendConnectResponse(connectIp, connectAccess, connectMsg);
 
                 if (++connectTimes > CONNECT_TIMES) {
                     showConnectResult(false);
@@ -119,11 +140,16 @@ namespace AndroidToPC_PC {
         }
 
         private void showConnectResult(bool success) {
+            isConnected = success;
+
             ThreadPool.QueueUserWorkItem(delegate {
                 this.Dispatcher.Invoke(new Action(() => {
+                    refresh.IsEnabled = !isConnected;
+
                     foreach (DeviceItem item in listDatas) {
                         if (item.DeviceIp.Equals(connectIp)) {
                             item.DeviceState = success ? "配对成功" : "空闲";
+                            break;
                         }
                     }
                 }), null);
@@ -159,10 +185,39 @@ namespace AndroidToPC_PC {
 
     }
 
-    class DeviceItem {
-        public string DeviceName { get; set; }
-        public string DeviceIp { get; set; }
-        public string DeviceState { get; set; }
+    class DeviceItem : INotifyPropertyChanged {
+        public event PropertyChangedEventHandler PropertyChanged;
+        private string deviceName = String.Empty;
+        private string deviceIp = String.Empty;
+        private string deviceState = String.Empty;
+
+        public string DeviceName {
+            get { return deviceName; }
+            set {
+                if (value != this.deviceName) {
+                    this.deviceName = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+        public string DeviceIp {
+            get { return deviceIp; }
+            set {
+                if (value != this.deviceIp) {
+                    this.deviceIp = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+        public string DeviceState {
+            get { return deviceState; }
+            set {
+                if (value != this.deviceState) {
+                    this.deviceState = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
 
         public override bool Equals(object obj) {
             if (obj != null && obj is DeviceItem) {
@@ -174,6 +229,12 @@ namespace AndroidToPC_PC {
 
         public override int GetHashCode() {
             return base.GetHashCode();
+        }
+
+        private void NotifyPropertyChanged([CallerMemberName] String propertyName = "") {
+            if (PropertyChanged != null) {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
     }
 }
