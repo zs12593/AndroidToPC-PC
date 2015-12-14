@@ -9,7 +9,7 @@ namespace AndroidToPC_PC.Net.Manager {
     public delegate void ReceiveCallback(Protocol.Protocol protocol);
 
     public enum ReceiveType {
-        Online, Offline, Connect, ConnectFeedback, MoveCursor, Click
+        Online, Offline, Connect, UnConnect, ConnectFeedback, MoveCursor, Click
     }
 
     class UDPReceiveManager {

@@ -64,13 +64,13 @@ namespace AndroidToPC_PC.Net.Protocol {
         [DataMember(Order = 2)]
         public bool access { get; set; }
         [DataMember(Order = 3)]
-        public string passwrod { get; set; }
+        public string password { get; set; }
         [DataMember(Order = 4)]
         public string message;
 
         public ConnectResponse(bool access, string password, string message) {
             this.access = access;
-            this.passwrod = passwrod;
+            this.password = password;
             this.message = message;
         }
     }
@@ -80,14 +80,27 @@ namespace AndroidToPC_PC.Net.Protocol {
     }
 
     [DataContract]
-    public class Cursor : ProtocolParam {
-        public static string CONNECTED_PASSWORD;
-
+    public class UnConnect : ProtocolParam {
         [DataMember(Order = 2)]
-        public string passwrod { get; set; }
+        public string password { get; set; }
+
+        public UnConnect(string passwro) {
+            this.password = password;
+        }
+    }
+
+
+    [DataContract]
+    public class UnConnectResponse : ProtocolParam {
+    }
+
+    [DataContract]
+    public class Cursor : ProtocolParam {
+        [DataMember(Order = 2)]
+        public string password { get; set; }
 
         public Cursor(string password) {
-            this.passwrod = passwrod;
+            this.password = password;
         }
     }
 
@@ -109,11 +122,19 @@ namespace AndroidToPC_PC.Net.Protocol {
         public const int LEFT_BUTTON = 0;
         public const int RIGHT_BUTTON = 1;
 
+        public const int STATE_DOWN = 0;
+        public const int STATE_UP = 1;
+        public const int STATE_DOWN_UP = 2;
+
         [DataMember(Order = 3)]
         public int button { get; set; }
 
-        public Click(string password, int button) : base(password) {
+        [DataMember(Order = 4)]
+        public int state { get; set; }
+
+        public Click(string password, int button, int state) : base(password) {
             this.button = button;
+            this.state = state;
         }
     }
 }

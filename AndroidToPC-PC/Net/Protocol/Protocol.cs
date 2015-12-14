@@ -31,11 +31,10 @@ namespace AndroidToPC_PC.Net.Protocol {
 
         private void sendMessage(object obj) {
             byte[] sendbytes = Encoding.UTF8.GetBytes(param.ToString());
+            IPEndPoint localIpep = new IPEndPoint(getIP(), 0);
             UdpClient sendClient = new UdpClient();
             sendClient.Send(sendbytes, sendbytes.Length, host);
             sendClient.Close();
-
-            System.Console.WriteLine("==== Message Send Finished");
         }
 
         private ProtocolParam createProtocolParam(string json) {
@@ -48,6 +47,17 @@ namespace AndroidToPC_PC.Net.Protocol {
                 obj = (ProtocolParam)serializer.ReadObject(ms);
                 return obj;
             }
+        }
+
+        private IPAddress getIP() {
+            string hostName = Dns.GetHostName();
+            IPAddress[] addressList = Dns.GetHostAddresses(hostName);
+            foreach (IPAddress addr in addressList) {
+                if (addr.ToString().StartsWith("192.168")) {
+                    return addr;
+                }
+            }
+            return IPAddress.Any;
         }
     }
 }

@@ -21,6 +21,11 @@ namespace AndroidToPC_PC {
         private const int CONNECT_TIMES = 5;
         private bool isConnected = false;
 
+        public delegate void MouseOperation();
+        private MouseOperation[,] mouseArr = {
+            { MouseController.leftDown,MouseController.leftUp ,MouseController.leftClick},
+            { MouseController.rightDown,MouseController.rightUp,MouseController.rightClick} };
+
         public MainWindow() {
             InitializeComponent();
 
@@ -28,6 +33,7 @@ namespace AndroidToPC_PC {
             UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.Online, onlineCallback);
             UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.Offline, offlineCallback);
             UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.Connect, connectCallback);
+            UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.UnConnect, unConnectCallback);
             UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.ConnectFeedback, connectFeedbackCallback);
             UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.MoveCursor, moveCursorCallback);
             UDPReceiveManager.getInstance().addReceiveCallback(ReceiveType.Click, clickCallback);
@@ -99,6 +105,7 @@ namespace AndroidToPC_PC {
                     }
 
                     RequestDialog dialog = new RequestDialog();
+                    dialog.Owner = this;
                     dialog.reqDevicename = connect.deviceName;
                     dialog.ShowDialog();
                     connectAccess = dialog.Access;
@@ -131,6 +138,29 @@ namespace AndroidToPC_PC {
             }
         }
 
+        private void unConnectCallback(Protocol p) {
+            if (ConnectedData.isAccess(p)) {
+                isConnected = false;
+
+                ThreadPool.QueueUserWorkItem(delegate {
+                    this.Dispatcher.Invoke(new Action(() => {
+                        refresh.IsEnabled = !isConnected;
+
+                        foreach (DeviceItem item in listDatas) {
+                            if (item.DeviceIp.Equals(ConnectedData.ip)) {
+                                item.DeviceState = "空闲";
+                                break;
+                            }
+                        }
+
+                        ConnectedData.ip = null;
+                        ConnectedData.password = null;
+                    }), null);
+                });
+            }
+            UDPSendManager.sendUnConnectResponse(p.host.Address.ToString());
+        }
+
         private void connectFeedbackCallback(Protocol p) {
             if (connectThread != null && connectThread.IsAlive) {
                 connectThread.Abort();
@@ -157,16 +187,16 @@ namespace AndroidToPC_PC {
         }
 
         private void moveCursorCallback(Protocol p) {
-            MoveCursor mc = (MoveCursor)p.param;
-            if (mc.passwrod != null && !mc.passwrod.Equals("") &&
-                mc.passwrod.Equals(AndroidToPC_PC.Net.Protocol.Cursor.CONNECTED_PASSWORD)) {
+            if (ConnectedData.isAccess(p)) {
+                MoveCursor mc = (MoveCursor)p.param;
+                MouseController.moveCursor(mc.x, mc.y);
             }
         }
 
         private void clickCallback(Protocol p) {
-            Click click = (Click)p.param;
-            if (click.passwrod != null && !click.passwrod.Equals("") &&
-                click.passwrod.Equals(AndroidToPC_PC.Net.Protocol.Cursor.CONNECTED_PASSWORD)) {
+            if (ConnectedData.isAccess(p)) {
+                Click click = (Click)p.param;
+                mouseArr[click.button, click.state]();
             }
         }
 

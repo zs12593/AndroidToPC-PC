@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using AndroidToPC_PC.Net.Protocol;
+using System.Net;
 
 namespace AndroidToPC_PC.Net.Manager {
     public class UDPSendManager {
@@ -28,15 +29,25 @@ namespace AndroidToPC_PC.Net.Manager {
 
         public static void sendConnectResponse(string ip, bool access, string message) {
             IPEndPoint host = new IPEndPoint(IPAddress.Parse("255.255.255.255"), SEND_PORT);
+            if (access) {
+                ConnectedData.ip = ip;
+                ConnectedData.password = generatePassword(access);
+            }
             Protocol.Protocol p = new Protocol.Protocol(
-                host, new Protocol.ConnectResponse(access, generatePassword(access), message));
+                host, new Protocol.ConnectResponse(access, ConnectedData.password, message));
+            p.send();
+        }
+
+        public static void sendUnConnectResponse(string ip) {
+            IPEndPoint host = new IPEndPoint(IPAddress.Parse("255.255.255.255"), SEND_PORT);
+            Protocol.Protocol p = new Protocol.Protocol(host, new Protocol.UnConnectResponse());
             p.send();
         }
 
         private static string generatePassword(bool access) {
             string pw = "";
             if (access) {
-
+                return "12345678";
             }
             return pw;
         }
